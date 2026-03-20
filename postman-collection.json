@@ -1,0 +1,549 @@
+{
+  "info": {
+    "name": "College Workshop Management System",
+    "_postman_id": "workshop-mgmt-collection-v1",
+    "description": "Complete API collection for the Smart College Workshop Management System.\n\nSetup:\n1. Set environment variable `baseUrl` = http://localhost:8080\n2. After login, set `token` = value from login response\n3. Use the auto-token pre-request script on the folder level",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "workshopId", "value": "1", "type": "string" },
+    { "key": "registrationId", "value": "1", "type": "string" },
+    { "key": "userId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Arjun Sharma\",\n  \"email\": \"arjun@college.edu\",\n  \"password\": \"Password1\",\n  \"confirmPassword\": \"Password1\",\n  \"phone\": \"9876543210\",\n  \"department\": \"Computer Science\",\n  \"rollNumber\": \"CS22001\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Register returns 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response has userId', () => pm.expect(pm.response.json()).to.have.property('userId'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@college.edu\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login returns 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Has token', () => pm.expect(body).to.have.property('token'));",
+                  "if (body.token) { pm.collectionVariables.set('token', body.token); pm.collectionVariables.set('userId', body.userId); }",
+                  "pm.test('Role is ADMIN', () => pm.expect(body.role).to.equal('ADMIN'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"arjun@college.edu\",\n  \"password\": \"Password1\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login returns 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body.token) { pm.collectionVariables.set('token', body.token); pm.collectionVariables.set('userId', body.userId); }",
+                  "pm.test('Role is STUDENT', () => pm.expect(body.role).to.equal('STUDENT'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Students (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/students", "host": ["{{baseUrl}}"], "path": ["api","auth","students"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🏫 Workshops (Student)",
+      "item": [
+        {
+          "name": "Get All Workshops",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/workshops", "host": ["{{baseUrl}}"], "path": ["api","workshops"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Is array', () => pm.expect(body).to.be.an('array'));",
+                  "if (body.length > 0) pm.collectionVariables.set('workshopId', body[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Workshop by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/workshops/{{workshopId}}", "host": ["{{baseUrl}}"], "path": ["api","workshops","{{workshopId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎓 Student Portal",
+      "item": [
+        {
+          "name": "Register for Workshop",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/student/register/{{workshopId}}", "host": ["{{baseUrl}}"], "path": ["api","student","register","{{workshopId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body.registrationId) pm.collectionVariables.set('registrationId', body.registrationId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Workshops",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/student/my-workshops", "host": ["{{baseUrl}}"], "path": ["api","student","my-workshops"] }
+          }
+        },
+        {
+          "name": "Pay via UPI",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/payment/{{registrationId}}", "host": ["{{baseUrl}}"], "path": ["api","student","payment","{{registrationId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"UPI\",\n  \"upiId\": \"arjun@oksbi\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Payment returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has transactionId', () => pm.expect(pm.response.json()).to.have.property('transactionId'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pay via Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/payment/{{registrationId}}", "host": ["{{baseUrl}}"], "path": ["api","student","payment","{{registrationId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"cardNumber\": \"4111111111111111\",\n  \"cardExpiry\": \"12/27\",\n  \"cardCvv\": \"123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Pay via Net Banking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/payment/{{registrationId}}", "host": ["{{baseUrl}}"], "path": ["api","student","payment","{{registrationId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"NET_BANKING\",\n  \"bankName\": \"HDFC\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Pay via Cash",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/payment/{{registrationId}}", "host": ["{{baseUrl}}"], "path": ["api","student","payment","{{registrationId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"CASH\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel Registration",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/student/cancel/{{registrationId}}", "host": ["{{baseUrl}}"], "path": ["api","student","cancel","{{registrationId}}"] }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/student/profile", "host": ["{{baseUrl}}"], "path": ["api","student","profile"] }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/profile", "host": ["{{baseUrl}}"], "path": ["api","student","profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Arjun K Sharma\",\n  \"phone\": \"9876543210\",\n  \"department\": \"Computer Science\",\n  \"rollNumber\": \"CS22001\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Admin Portal",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/stats", "host": ["{{baseUrl}}"], "path": ["api","admin","stats"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test('Has all stat fields', () => {",
+                  "  pm.expect(s).to.have.all.keys('totalWorkshops','totalStudents','totalRegistrations','totalRevenue','pendingPayments','confirmedRegistrations');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Workshop",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/workshops", "host": ["{{baseUrl}}"], "path": ["api","admin","workshops"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"DevOps & CI/CD Pipeline\",\n  \"description\": \"Learn Docker, Kubernetes, Jenkins, and GitHub Actions for modern DevOps workflows.\",\n  \"instructor\": \"Dr. Ravi Verma\",\n  \"venue\": \"Server Room Lab, Block E\",\n  \"startDate\": \"2026-06-10T09:00\",\n  \"endDate\": \"2026-06-12T17:00\",\n  \"capacity\": 30,\n  \"fee\": 800.00,\n  \"category\": \"DevOps\",\n  \"status\": \"UPCOMING\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Creates workshop with 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body.id) pm.collectionVariables.set('workshopId', body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Workshop",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/workshops/{{workshopId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","workshops","{{workshopId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"DevOps & CI/CD Pipeline (Updated)\",\n  \"description\": \"Updated description.\",\n  \"instructor\": \"Dr. Ravi Verma\",\n  \"venue\": \"Server Room Lab, Block E\",\n  \"startDate\": \"2026-06-10T09:00\",\n  \"endDate\": \"2026-06-12T17:00\",\n  \"capacity\": 35,\n  \"fee\": 900.00,\n  \"category\": \"DevOps\",\n  \"status\": \"UPCOMING\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Workshop",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/workshops/{{workshopId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","workshops","{{workshopId}}"] }
+          }
+        },
+        {
+          "name": "Get All Registrations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/registrations", "host": ["{{baseUrl}}"], "path": ["api","admin","registrations"] }
+          }
+        },
+        {
+          "name": "Get Registrations by Workshop",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/registrations/{{workshopId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","registrations","{{workshopId}}"] }
+          }
+        },
+        {
+          "name": "Confirm Registration",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/registrations/{{registrationId}}/confirm", "host": ["{{baseUrl}}"], "path": ["api","admin","registrations","{{registrationId}}","confirm"] }
+          }
+        },
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/payments", "host": ["{{baseUrl}}"], "path": ["api","admin","payments"] }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/users", "host": ["{{baseUrl}}"], "path": ["api","admin","users"] }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","users","{{userId}}"] }
+          }
+        },
+        {
+          "name": "Delete Student Account",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","users","{{userId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚠️ Error Handling Tests",
+      "item": [
+        {
+          "name": "Login - Wrong Password (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@college.edu\",\n  \"password\": \"wrongpassword\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error is INVALID_CREDENTIALS', () => pm.expect(pm.response.json().error).to.equal('INVALID_CREDENTIALS'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - Duplicate Email (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Duplicate\",\n  \"email\": \"admin@college.edu\",\n  \"password\": \"Password1\",\n  \"confirmPassword\": \"Password1\",\n  \"phone\": \"9000000000\",\n  \"department\": \"Computer Science\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Error is EMAIL_ALREADY_EXISTS', () => pm.expect(pm.response.json().error).to.equal('EMAIL_ALREADY_EXISTS'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - Weak Password (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"test123@college.edu\",\n  \"password\": \"weak\",\n  \"confirmPassword\": \"weak\",\n  \"phone\": \"9000000001\",\n  \"department\": \"Computer Science\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Workshop - Not Found (404)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/workshops/99999", "host": ["{{baseUrl}}"], "path": ["api","workshops","99999"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error is WORKSHOP_NOT_FOUND', () => pm.expect(pm.response.json().error).to.equal('WORKSHOP_NOT_FOUND'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Workshop - Past Date (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/workshops", "host": ["{{baseUrl}}"], "path": ["api","admin","workshops"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Past Workshop\",\n  \"instructor\": \"Someone\",\n  \"venue\": \"Lab 1\",\n  \"startDate\": \"2020-01-01T09:00\",\n  \"endDate\": \"2020-01-02T17:00\",\n  \"capacity\": 10,\n  \"fee\": 100\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error is INVALID_WORKSHOP_DATE', () => pm.expect(pm.response.json().error).to.equal('INVALID_WORKSHOP_DATE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid UPI Payment (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/payment/{{registrationId}}", "host": ["{{baseUrl}}"], "path": ["api","student","payment","{{registrationId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"paymentMethod\": \"UPI\",\n  \"upiId\": \"INVALID_UPI\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error is INVALID_PAYMENT', () => pm.expect(pm.response.json().error).to.equal('INVALID_PAYMENT'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
