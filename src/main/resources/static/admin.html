@@ -777,7 +777,7 @@ async function deleteStudent(id,name){
   }catch(e){showToast(e.message,'error');}
 }
 
-async function searchRegistration(scannedId){
+async function searchRegistration(scannedId, autoCheckIn = false){
   let val = scannedId || document.getElementById('scan-input').value.trim();
   if(!val) return;
   
@@ -790,18 +790,54 @@ async function searchRegistration(scannedId){
   // Robust cleaning: Strip prefix and any team member suffix (e.g. REG-123-T1 -> 123)
   val = val.toUpperCase().replace('REG-', '').split('-')[0].trim();
   
-  // Basic validation to avoid 500 errors on non-numeric IDs
-  if (!/^\d+$/.test(val)) {
-    showToast("Invalid Registration ID format in QR code.", "warning");
-    return;
-  }
-  
-  document.getElementById('scan-input').value = 'REG-' + val;
   const btn = document.getElementById('scan-search-btn');
   const resEl = document.getElementById('scan-result');
   showSpinner(btn);
+  
   try {
-    const r = await apiFetch('GET', `/api/admin/registrations/ticket/${val}`);
+    let ticketIdToFetch = val;
+    
+    // Feature: Teacher scanning College ID Card / Register No (Alphanumeric like 22CS015)
+    if (!/^\d+$/.test(val)) {
+        showToast("Searching by Reg No (Roll Number)...", "info");
+        // Fetch all registrations to find the matching student ticket
+        const allRegsList = await apiFetch('GET', '/api/admin/registrations');
+        
+        // Find an active registration matching this roll number (lead student or team member)
+        const matchedReg = allRegsList.find(r => {
+           if (r.registrationStatus === 'CANCELLED') return false;
+           // Match lead student Reg No
+           let matchFound = (r.studentRollNumber && r.studentRollNumber.toUpperCase() === val);
+           // Match team member Reg No
+           if (!matchFound && r.teamMembers) {
+               try {
+                   const tms = JSON.parse(r.teamMembers);
+                   if (tms.find(tm => tm.rollNumber && tm.rollNumber.toUpperCase() === val)) {
+                       matchFound = true;
+                   }
+               } catch(e) {}
+           }
+           return matchFound;
+        });
+        
+        if (!matchedReg) {
+            throw new Error("No active tickets found for Reg No: " + val);
+        }
+        ticketIdToFetch = matchedReg.registrationId;
+    }
+    
+    // Auto-fill the numeric ID now that we successfully matched against a Reg No
+    document.getElementById('scan-input').value = 'REG-' + ticketIdToFetch;
+    
+    const r = await apiFetch('GET', `/api/admin/registrations/ticket/${ticketIdToFetch}`);
+    
+    // Feature: Auto-process the check-in if scanned via QR and not attended!
+    if (autoCheckIn && !r.attended) {
+        showToast("Processing auto check-in...", "info");
+        await markAsAttended(r.registrationId);
+        return; // markAsAttended will redraw the screen automatically
+    }
+
     resEl.style.display = 'block';
     
     let teamHtml = '';
@@ -861,12 +897,15 @@ async function searchRegistration(scannedId){
 
 async function markAsAttended(id){
   const btn = document.getElementById('attend-btn');
-  showSpinner(btn);
+  if(btn) showSpinner(btn);
   try {
      await apiFetch('PUT', `/api/admin/registrations/${id}/attend`);
      showToast('Attendance recorded!', 'success');
      searchRegistration(); // Refresh view
-  } catch(e) { showToast(e.message, 'error'); hideSpinner(btn); }
+  } catch(e) { 
+     showToast(e.message, 'error'); 
+     if(btn) hideSpinner(btn); 
+  }
 }
 
 async function markAsCompleted(id) {
@@ -917,8 +956,8 @@ async function startScanner() {
       config,
       (decodedText) => {
         stopScanner();
-        searchRegistration(decodedText);
-        showToast("Ticket scanned!", "success");
+        searchRegistration(decodedText, true); // true = autoCheckIn
+        showToast("Ticket scanned successfully! Processing...", "success");
       }
     );
   } catch(err) {
@@ -939,8 +978,8 @@ async function switchCamera(cameraId) {
       config,
       (decodedText) => {
         stopScanner();
-        searchRegistration(decodedText);
-        showToast("Ticket scanned!", "success");
+        searchRegistration(decodedText, true); // true = autoCheckIn
+        showToast("Ticket scanned successfully! Processing...", "success");
       }
     );
   } catch(e) {

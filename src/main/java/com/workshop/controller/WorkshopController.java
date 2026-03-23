@@ -5,7 +5,9 @@ import com.workshop.dto.WorkshopResponse;
 import com.workshop.service.WorkshopService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -26,5 +28,13 @@ public class WorkshopController {
     @GetMapping("/{id}")
     public ResponseEntity<WorkshopResponse> getWorkshopById(@PathVariable Long id) {
         return ResponseEntity.ok(workshopService.getWorkshopById(id));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<WorkshopResponse>> searchWorkshops(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate) {
+        return ResponseEntity.ok(workshopService.searchWorkshops(title, category, startDate));
     }
 }

@@ -29,6 +29,13 @@ public class WorkshopService {
                 .collect(Collectors.toList());
     }
 
+    public List<WorkshopResponse> searchWorkshops(String title, String category, LocalDateTime startDate) {
+        return workshopRepository.searchWorkshops(title, category, startDate)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     public WorkshopResponse getWorkshopById(Long id) {
         Workshop workshop = workshopRepository.findById(id)
                 .orElseThrow(() -> new WorkshopNotFoundException("Workshop not found with ID: " + id));

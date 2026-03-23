@@ -38,7 +38,7 @@ public class StudentController {
     @PostMapping("/register/{workshopId}")
     public ResponseEntity<Map<String, Object>> registerForWorkshop(
             @PathVariable Long workshopId,
-            @RequestBody(required = false) TeamRegistrationRequest request,
+            @Valid @RequestBody(required = false) TeamRegistrationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long studentId = getStudentId(userDetails);
         Map<String, Object> response = studentService.registerForWorkshop(workshopId, studentId, request);
