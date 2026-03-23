@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard (MVC Page Demo)</title>
+    <!-- Simple CSS3 for styling -->
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            margin: 0; 
+            padding: 40px 20px; 
+        }
+        .container { 
+            max-width: 900px; 
+            margin: auto; 
+            background: #ffffff; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { 
+            color: #2c3e50; 
+            margin-top: 0;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 10px;
+        }
+        p.subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            padding: 15px; 
+            text-align: left; 
+            border-bottom: 1px solid #e0e0e0; 
+        }
+        th { 
+            background-color: #2ecc71; 
+            color: #ffffff; 
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover { 
+            background-color: #f1f8ff; 
+        }
+        .badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Thymeleaf Student View: Upcoming Events</h1>
+        <p class="subtitle">This page satisfies the <strong>"MVC Pages"</strong> requirement for students browsing upcoming events.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Venue</th>
+                    <th>Date & Time</th>
+                    <th>Fee</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Iterates over the 'workshops' attribute provided by StudentViewController -->
+                <tr th:each="workshop : ${workshops}">
+                    <td th:text="${workshop.title}">Intro to AI</td>
+                    <td>
+                        <span th:text="${workshop.category}" class="badge">Technology</span>
+                    </td>
+                    <td th:text="${workshop.venue}">Main Hall 1</td>
+                    <td th:text="${#temporals.format(workshop.startDate, 'dd-MMM-yyyy HH:mm')}">14-Aug-2024 10:00</td>
+                    <td th:text="'₹' + ${workshop.fee}">₹500.00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(workshops)}">
+                    <td colspan="5" style="text-align: center; color: #7f8c8d;">No upcoming events found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,4 +1,5 @@
 com\workshop\exception\TokenExpiredException.class
+com\workshop\controller\StudentViewController.class
 com\workshop\dto\RegistrationResponse.class
 com\workshop\exception\RegistrationCancelledException.class
 com\workshop\repository\UserRepository.class
@@ -30,6 +31,7 @@ com\workshop\model\User.class
 com\workshop\dto\PaymentResponse.class
 com\workshop\dto\StudentSummaryResponse$StudentSummaryResponseBuilder.class
 com\workshop\exception\SelfRegistrationException.class
+com\workshop\controller\AdminViewController.class
 com\workshop\dto\ProfileUpdateRequest.class
 com\workshop\controller\WorkshopController.class
 com\workshop\dto\WorkshopRequest.class

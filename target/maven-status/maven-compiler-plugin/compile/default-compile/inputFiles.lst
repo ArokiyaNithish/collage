@@ -32,6 +32,7 @@ C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\DataInitializer.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\dto\PaymentResponse.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\service\AdminService.java
+C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\controller\StudentViewController.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\exception\InvalidCredentialsException.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\exception\WorkshopNotFoundException.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\service\WorkshopService.java
@@ -42,6 +43,7 @@ C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\controller\AuthController.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\exception\WeakPasswordException.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\repository\PaymentRepository.java
+C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\controller\AdminViewController.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\exception\AlreadyRegisteredException.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\exception\EmailAlreadyExistsException.java
 C:\Users\Arokiya Nithish\Downloads\project fds\workshop-management\src\main\java\com\workshop\exception\InvalidTokenException.java

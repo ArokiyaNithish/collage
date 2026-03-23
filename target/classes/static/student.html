@@ -654,9 +654,18 @@ async function loadMyRegistrations(){
           actions+=`<button class="btn btn-success btn-sm" onclick="openPayForReg(${r.registrationId},${r.fee},'${(r.workshopTitle||'').replace(/'/g,"\\'")}')">💳 Pay Now</button> `;
           actions+=`<button class="btn btn-danger btn-sm" onclick="openCancelModal(${r.registrationId},'${(r.workshopTitle||'').replace(/'/g,"\\'")}')">✕ Cancel</button>`;
         }else{
-          actions=`<span style="color:var(--success);font-weight:700;margin-right:12px;">✅ Paid</span>`;
-          actions+=`<button class="btn btn-primary btn-sm" onclick='showTicket(${JSON.stringify(r)})'>🎟️ View Ticket</button> `;
-          actions+=`<button class="btn btn-outline btn-sm" style="border-color:var(--warning);color:var(--warning);" onclick="processRefund(${r.registrationId},'${(r.workshopTitle||'').replace(/'/g,"\\'")}')">💸 Refund</button>`;
+          if (r.checkOutTime) {
+             actions=`<div style="background:var(--success-light, #d1fae5); color:#065f46; padding:6px 12px; border-radius:6px; font-weight:700; font-size:0.85rem;">🏁 Session Completed. Thank you for attending!</div>`;
+             borderColor='var(--success)';
+          } else if (r.attended) {
+             actions=`<span style="color:var(--primary);font-weight:700;margin-right:12px;">✅ Marked Present</span>`;
+             actions+=`<button class="btn btn-primary btn-sm" onclick='showTicket(${JSON.stringify(r)})'>🎟️ View Ticket</button>`;
+             borderColor='var(--primary)';
+          } else {
+             actions=`<span style="color:var(--success);font-weight:700;margin-right:12px;">✅ Paid</span>`;
+             actions+=`<button class="btn btn-primary btn-sm" onclick='showTicket(${JSON.stringify(r)})'>🎟️ View Ticket</button> `;
+             actions+=`<button class="btn btn-outline btn-sm" style="border-color:var(--warning);color:var(--warning);" onclick="processRefund(${r.registrationId},'${(r.workshopTitle||'').replace(/'/g,"\\'")}')">💸 Refund</button>`;
+          }
         }
       }else{actions='<span style="color:var(--text-muted);">Cancelled</span>';}
       return `<div class="my-reg-card" style="border-left-color:${borderColor};">
@@ -786,7 +795,8 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 function showTicket(reg){
   const container = document.getElementById('ticket-content');
-  const mainQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=REG-${reg.registrationId}`;
+  const mainQrData = currentProfile.rollNumber || ('REG-' + reg.registrationId);
+  const mainQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${mainQrData}`;
   
   let teamQrsHtml = '';
   if(reg.teamMembersCount > 1 && reg.teamMembers){
@@ -796,7 +806,8 @@ function showTicket(reg){
         <h4 style="margin-bottom:15px; font-size:1rem; color:var(--primary);">👥 Team Member Tickets</h4>
         <div style="display:flex; flex-direction:column; gap:25px;">
           ${members.map((m, idx) => {
-            const memberQr = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=REG-${reg.registrationId}-T${idx+1}`;
+            const memberQrData = m.rollNumber || ('REG-' + reg.registrationId + '-T' + (idx+1));
+            const memberQr = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${memberQrData}`;
             return `
               <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid var(--border);">
                 <div style="font-weight:700; margin-bottom:10px;">${m.name}</div>
